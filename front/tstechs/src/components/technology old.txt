@@ -1,0 +1,177 @@
+import { title } from 'process';
+import {Component, useState} from 'react'
+import { useParams } from 'react-router-dom'
+import Tech from '../Tech'
+import axios from 'axios'
+import './technologies.css'
+import {useForm} from "react-hook-form"
+
+interface TechnologyProps {
+	id:number, title:string, rate:number
+}
+
+interface TechnologyState {
+	tech:Tech
+}
+
+export default function TechnologyLink() {
+	const technologyId = useParams();
+	console.log('technologyLink id: ', technologyId.id);
+
+	return (
+			<><h4>TechnologyLink: {technologyId.id}</h4>
+			<Technology id={technologyId.id}/>
+			</>
+		)
+}
+
+export const TechnologyForm = (props) => {
+
+	console.log('Form props:', JSON.stringify(props));
+
+	const { register, handleSubmit } = useForm();
+	const form_id = props.ftech.id;
+	const [id, setId] = useState(form_id);
+	const [title, setTitle] = useState(props.ftech.title);
+	const [rate, setRate] = useState(props.ftech.rate);
+
+	const init = (id,title,rate) => {
+		//setId(props.ftech.id);
+		//setTitle(props.ftech.title);
+		//setRate(props.ftech.rate);
+		console.log('Form state: ', id, title, rate);
+	}
+
+	init(id, title, rate);
+
+	const execOnSubmit = (data) => {
+		const fields =  new Tech(id,title, rate);
+		console.log('submit data: ', JSON.stringify(fields));
+		props.onSubmitFunc(fields);
+
+	}
+
+	const handleChangeTitle = (e) => {
+		setTitle(e.target.value);
+	}
+
+	const handleRateChange = (e) => {
+		setRate(e.target.value);
+	} 
+
+	
+	return(
+	<>
+	<h4>TechnologyForm</h4>
+	<form onSubmit={handleSubmit(execOnSubmit)}>
+			<label>Title:</label>
+			<input id="Title" value={title} onChange={handleChangeTitle}  /><br/>
+			
+			<label>Rate:</label>
+			<input id="Rate" value= {rate} onChange={handleRateChange} /><br/>
+			
+			<label>Save:</label>
+			<button type="submit">Save</button>
+			
+			</form>
+
+	</>	
+	)
+}
+
+
+export class Technology extends Component<any,any> {
+
+	state = {
+		tech:{id:0, title:'', rate:0}
+	}
+
+	 Id = 0
+
+
+
+
+
+	constructor(props) {
+		//const params = useParams();
+		super(props);
+		this.Id = props.id
+		//let tech = new Tech(0,'',0);
+		//this.setState({tech:tech});
+		console.log('technology props: ', this.props);
+		//this.Save = this.Save.bind(this);
+		
+	}
+	
+
+	componentDidMount() {
+		console.log('technology id: ', this.Id);
+		const apiurl = "http://localhost:8000/techs/tech/" + this.Id;
+		  axios.get(apiurl).then((resp) => {
+			const tech = resp.data;
+			console.log('get tech: ', JSON.stringify(tech));
+			//this.tech = tech;
+			this.setState({tech: {id:this.Id, title:tech.title, rate:tech.rate}});
+			const newstate = this.state.tech;
+			console.log('get this.tech: ', JSON.stringify(this.state.tech));
+
+		  });
+	}
+
+	Save(formData) {
+		console.log('Save data: ', JSON.stringify(formData));
+		const url = "http://localhost:8000/techs/tech"
+		const tech = this.state.tech;
+		const data = {id: tech.id, 
+			title: formData.Title, rate: formData.Rate };
+		const datastr = JSON.stringify(data);
+		console.log('datastr: ', datastr);
+		axios.post(url, {Headers:{
+			"Content-Type": "application/json",
+
+		}, body: datastr} ).then(res => {
+			console.log('save resp: ', res);
+		})
+
+	}
+/*
+	handleChangeTitle = (e) => {
+		const tech = this.state.tech;
+		tech.title = e.target.value;
+		this.setState({tech:tech});
+
+	}
+
+	handleChangeRate = (e) => {
+		const tech = this.state.tech;
+		tech.rate = e.target.value;
+		this.setState({tech:tech});
+	}
+*/
+	render() {
+		const tech = this.state.tech;
+		//const { register, handleSubmit} = useForm();
+
+		console.log('render tech: ', tech);
+		if(!(tech === undefined || tech === null))
+
+		{
+		return (
+			<>
+			<div className="center_block">
+			<h4>Technology</h4>
+			<TechnologyForm onSubmitFunc={this.Save} ftech = {this.state.tech}/>
+			</div>
+			</>
+		)
+	}
+	else {
+		return (
+			<>
+			<p>Undefined or null</p>
+			</>
+		)
+	}
+	}
+
+}

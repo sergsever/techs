@@ -1,0 +1,14 @@
+.center_block {
+  border: 1px solid black;
+  width: 250px;
+  display:block;
+  margin: auto;
+  text-align:center;
+
+}
+
+#technology_form {
+  margin:auto;
+  display:flex;
+  width: 250px;
+}
